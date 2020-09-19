@@ -11,7 +11,6 @@ Camera::Camera(): cameraPosition(0.0f, 0.0f, 3.0f),
 
 	UpdateCameraVectors();
 
-	view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
 }
 
 Camera::~Camera()
@@ -108,6 +107,8 @@ void Camera::SetCameraType(CameraType type)
 void Camera::SetPosition(glm::vec3 position)
 {
 	cameraPosition = position;
+
+	UpdateCameraVectors();
 }
 
 void Camera::SetRotation(glm::vec3 rotation)
@@ -142,7 +143,7 @@ glm::vec3 Camera::GetRotation()
 
 glm::mat4 Camera::GetViewMatrix()
 {
-	return view;
+	return view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
 }
 
 CameraType Camera::GetCameraType()

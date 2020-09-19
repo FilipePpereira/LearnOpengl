@@ -138,7 +138,7 @@ int main()
     }
 
     m_plane->Initialized();
-
+    m_plane->SetTexture(*m_pTextureManager);
 
     m_lightCube = new LightCube();
     if (!m_lightCube)
@@ -163,33 +163,33 @@ int main()
     POINT center =  CenterWindow(m_screenWidth, m_screenHeight);
     glfwSetWindowPos(window, center.x, center.y);
 
+    
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        
         // input
         // -----
         processInput(window);
+        glfwPollEvents();
         float currentFrame = (float)glfwGetTime();
         deltaTime = (float)currentFrame - lastTime;
-        lastTime = currentFrame;
+       
 
-        m_pPlayerControl->Update(deltaTime);
+       
 
         m_plane->Update();
 
-      
-
         // render
-        // ------
+       // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        
+
+
         Draw();
       
-
         // setup view matrix
         glm::mat4 trans = glm::mat4(1.0f);
         glm::mat4 model = glm::mat4(1.0f);
@@ -197,53 +197,53 @@ int main()
         glm::mat4 projection = glm::mat4(1.0f);
 
         
-
+        
         // m_camera
-        // setup program compiler
-       
-       
-        m_shaderPlane->UsePrograma();
+        m_pPlayerControl->Update(deltaTime);
+        view = m_pPlayerControl->GetCameraView();
+        projection = glm::perspective(glm::radians(45.0f), (float)m_screenWidth / (float)m_screenHeight, 0.1f, 10000.0f);
 
-        // color shader
-        m_shaderPlane->SetFloat4f("RColor", 0.5f, 1.0f, 0.5f, 1.0f);
-        // set Texture
-        m_shaderPlane->SetInt("ourTexture", 1);
-
-        // m_camera
-
-        trans = glm::translate(trans, glm::vec3(m_pPlayerControl->GetCameraPosition()));
-        model = glm::translate(trans, glm::vec3(0.0f, 0.0f, -3.0f));
+      
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.0f));
-        view = m_pPlayerControl->GetCameraView();
 
-        projection = glm::perspective(glm::radians(45.0f), (float)m_screenWidth / (float)m_screenHeight, 0.1f, 10000.0f);
+       
         
+        m_shaderPlane->UsePrograma();
         m_shaderPlane->SetMat4("model", model);
         m_shaderPlane->SetMat4("view", view);
         m_shaderPlane->SetMat4("projection", projection);
-
-      
-
-
-        m_plane->Draw();
+        m_plane->Draw(m_shaderPlane);
         
 
 
-        m_shaderCube->UsePrograma();
       
-        glm::mat4 modelcube = glm::mat4(1.0f);
-        modelcube = glm::translate(trans, glm::vec3(0.0f, 0.0f, -3.0f));
-        modelcube = glm::rotate(modelcube, glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-        modelcube = glm::scale(modelcube, glm::vec3(0.25f));
-        m_shaderCube->SetMat4("model", modelcube);
-        m_shaderCube->SetMat4("view", view);
-        m_shaderCube->SetMat4("projection", projection);
-        /* m_lightCube->Update();*/
+      
+       
+       
 
-        m_cubeObject->Update();
-  
-        m_cubeObject->Draw(m_shaderCube);
+        
+        for (size_t i = 0; i < 4; i++)
+        {
+            for (size_t j = 0; j < 4; j++)
+            {
+                m_shaderCube->UsePrograma();
+                glm::mat4 modelcube = glm::mat4(1.0f);
+                modelcube = glm::translate(modelcube, glm::vec3(i, j, 0.0f));
+                modelcube = glm::scale(modelcube, glm::vec3(0.25f));
+
+                m_shaderCube->SetMat4("model", modelcube);
+                m_shaderCube->SetMat4("view", view);
+                m_shaderCube->SetMat4("projection", projection);
+                /* m_lightCube->Update();*/
+
+                m_cubeObject->Update();
+                m_cubeObject->Draw(m_shaderCube);
+            }
+
+        }
+
         m_pTextureManager->Draw();
 
 
@@ -251,7 +251,9 @@ int main()
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
-        glfwPollEvents();
+       
+
+        lastTime = currentFrame;
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.

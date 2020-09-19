@@ -44,6 +44,23 @@ bool Game::InitShaders()
     ///-----------------------        end shaders       
 }
 
+void Game::InitializedTextures()
+{
+    ///-----------------------        start Textures        ------------------------------//
+    m_pTextureManager = new TextureManager();
+
+    if (!m_pTextureManager)
+    {
+        std::cout << "failed creat texture" << "\n";
+    }
+
+    m_pTextureManager->LoadTextures("assets/textures/wall.jpg", true);
+
+    ///-----------------------        end Textures        ------------------------------//
+
+}
+
+
 void Game::InitializedGameObjects()
 {
     m_pPlayerControl = new PlayerControl();
@@ -55,6 +72,7 @@ void Game::InitializedGameObjects()
     }
 
     m_plane->Initialized();
+    m_plane->SetTexture(*m_pTextureManager);
 
     m_lightCube = new LightCube();
     if (!m_lightCube)
@@ -77,20 +95,50 @@ void Game::InitializedGameObjects()
 
 }
 
-void Game::InitializedTextures()
+bool Game::Initialized(std::string title, int with, int height)
 {
-    ///-----------------------        start Textures        ------------------------------//
-    m_pTextureManager = new TextureManager();
 
-    if (!m_pTextureManager)
+
+    // glfw: initialize and configure
+    // ------------------------------
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+    // glfw window creation
+    // --------------------
+    m_pWindow = glfwCreateWindow(m_screenWidth, m_screenHeight, "LearnOpenGL", NULL, NULL);
+    if (m_pWindow == NULL)
     {
-        std::cout << "failed creat texture" << "\n";
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return false;
+    }
+    glfwMakeContextCurrent(m_pWindow);
+    glfwSetFramebufferSizeCallback(m_pWindow, framebuffer_size_callback);
+
+
+    // glad: load all OpenGL function pointers
+    // ---------------------------------------
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return false;
     }
 
-    m_pTextureManager->LoadTextures("assets/textures/wall.jpg", true);
+    POINT center = CenterWindow(m_screenWidth, m_screenHeight);
+    glfwSetWindowPos(m_pWindow, center.x, center.y);
 
-    ///-----------------------        end Textures        ------------------------------//
+    InitShaders();
+    InitializedGameObjects();
+    InitializedTextures();
 
+    return false;
 }
 
 void Game::UpdateShader()
@@ -104,29 +152,41 @@ void Game::UpdateShader()
 
 
     // m_camera
-    // setup program compiler
-
-
-    m_shaderPlane->UsePrograma();
-
-    // color shader
-    m_shaderPlane->SetFloat4f("RColor", 0.5f, 1.0f, 0.5f, 1.0f);
-    // set Texture
-    m_shaderPlane->SetInt("ourTexture", 1);
+    
 
     // m_camera
 
-    trans = glm::translate(trans, glm::vec3(m_pPlayerControl->GetCameraPosition()));
-    model = glm::translate(trans, glm::vec3(0.0f, 0.0f, -3.0f));
-    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
     view = m_pPlayerControl->GetCameraView();
-
     projection = glm::perspective(glm::radians(45.0f), (float)m_screenWidth / (float)m_screenHeight, 0.1f, 10000.0f);
 
+    
+
+  
+
+    trans = glm::translate(trans, glm::vec3(m_pPlayerControl->GetCameraPosition()));
+    model = glm::translate(trans, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f));
+
+
+   // setup program compiler
+    m_shaderPlane->UsePrograma();
     m_shaderPlane->SetMat4("model", model);
     m_shaderPlane->SetMat4("view", view);
     m_shaderPlane->SetMat4("projection", projection);
+
+
+    m_shaderCube->UsePrograma();
+
+    glm::mat4 modelcube = glm::mat4(1.0f);
+    modelcube = glm::translate(trans, glm::vec3(0.0f, 0.0f, -3.0f));
+    modelcube = glm::rotate(modelcube, glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    modelcube = glm::scale(modelcube, glm::vec3(0.25f));
+    m_shaderCube->SetMat4("model", modelcube);
+    m_shaderCube->SetMat4("view", view);
+    m_shaderCube->SetMat4("projection", projection);
+
 }
 
 void Game::UpdateGameObjects()
@@ -161,53 +221,6 @@ POINT Game::CenterWindow(int width, int height)
     return center;
 }
 
-
-bool Game::Initialized(std::string title, int with, int height)
-{
-
-
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    // glfw window creation
-    // --------------------
-    m_pWindow = glfwCreateWindow(m_screenWidth, m_screenHeight, "LearnOpenGL", NULL, NULL);
-    if (m_pWindow == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(m_pWindow);
-    glfwSetFramebufferSizeCallback(m_pWindow, framebuffer_size_callback);
-
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    POINT center = CenterWindow(m_screenWidth, m_screenHeight);
-    glfwSetWindowPos(m_pWindow, center.x, center.y);
-
-    InitShaders();
-    InitializedGameObjects();
-    InitializedTextures();
-
-    return false;
-}
-
 void Game::Run()
 {
     while (!glfwWindowShouldClose(m_pWindow))
@@ -222,15 +235,22 @@ void Game::Run()
 
 void Game::Update()
 {
+    float currentFrame = (float)glfwGetTime();
+    deltaTime = (float)currentFrame - lastTime;
    
-   glfwPollEvents();
+   UpdateShader();
 
    processInput(m_pWindow);
 
     UpdateGameObjects();
-    UpdateShader();
+  
     UpdateGameObjects();
+    
+    glfwPollEvents();
+    
     glfwSwapBuffers(m_pWindow);
+
+    lastTime = currentFrame;
 }
 
 void Game::Draw()
@@ -239,8 +259,10 @@ void Game::Draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    m_cubeObject->Draw();
-    m_plane->Draw();
+    m_cubeObject->Draw(m_shaderCube);
+
+    m_plane->Draw(m_shaderPlane);
+    
     m_pTextureManager->Draw();
 
     /*   m_lightCube->Draw(); */

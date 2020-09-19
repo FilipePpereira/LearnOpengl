@@ -9,9 +9,9 @@
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 
 #include"TextureManager.h"
-#include"Camera.h"
 
 
+#include"ShaderProgram.h"
 
 class Plane
 {
@@ -22,22 +22,20 @@ public:
 
 	void Initialized();
 	void Update();
-	void Draw();
+	void Draw(ShaderProgram* shader);
 	void Shutdown();
 
 	void SetPosition(float x, float y, float z);
 	void SetPosition(glm::vec3 position);
 
+	void SetTexture(TextureManager& Texture);
 	glm::vec3 GetPosition();
 
-
-	glm::mat4 GetViewMatrix();
+	TextureManager* GetTexture();
 private:
 	TextureManager* m_pTextureManager;
 	unsigned int VBO, VAO, EBO;
 
-	glm::mat4 view;
-	Camera* camera;
 	glm::vec3 m_position;
 };
 #endif // !__PLANE_H_

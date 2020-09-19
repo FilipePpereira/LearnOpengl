@@ -1,12 +1,7 @@
 #include"Plane.h"
-#include"ShaderProgram.h"
 
 
-
-#include"TextureManager.h"
-
-
-Plane::Plane(): VBO(), VAO(), EBO()
+Plane::Plane(): VBO(), VAO(), EBO(), m_pTextureManager(nullptr)
 {
 
 }
@@ -65,8 +60,13 @@ void Plane::Update()
 
 }
 
-void Plane::Draw()
+void Plane::Draw(ShaderProgram* shader)
 {
+    // color shader
+    shader->SetFloat4f("RColor", 0.5f, 1.0f, 0.5f, 1.0f);
+    // set Texture
+    shader->SetInt("ourTexture", 1);
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -90,14 +90,20 @@ void Plane::SetPosition(glm::vec3 position)
     m_position = position;
 }
 
+void Plane::SetTexture(TextureManager& Texture)
+{
+    m_pTextureManager = &Texture;
+}
+
 glm::vec3 Plane::GetPosition()
 {
     return m_position;
 }
 
-glm::mat4 Plane::GetViewMatrix()
+TextureManager* Plane::GetTexture()
 {
-    return view;
+    return m_pTextureManager;
 }
+
 
 

@@ -1,6 +1,9 @@
 #include "PlayerControl.h"
 #include"InputManager.h"
 
+// include glad and glfw
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 
 
@@ -18,9 +21,7 @@ void PlayerControl::Initialized(GLFWwindow* window)
 {
 
     m_camera = new Camera();
-    glm::vec3 positionCamera = glm::vec3(0.0f, 0.0f, 3.0f);
-    m_camera->SetPosition(positionCamera);
-
+  
     glfwSetKeyCallback(window, InputManager::InputManagerCallback);
 
 }
@@ -34,38 +35,57 @@ void PlayerControl::Update(float deltaTime)
     
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_W))
     {
-        cameraPosition.z += speed * deltaTime;
+        cameraPosition.z += speed * deltaTime * m_camera->GetCameraFront().z;
         std::cout << "Move Z: " << cameraPosition.z << "\n";
     }
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_S))
     {
-        cameraPosition.z -= speed * deltaTime;
+        cameraPosition.z -= m_camera->GetCameraFront().z * deltaTime;
         std::cout << "Move Z: " << -cameraPosition.z << "\n";
     }
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_A))
     {
-        cameraPosition.x += speed * deltaTime;
+        cameraPosition.x -= speed * deltaTime;
         std::cout << "Move -X: " << -cameraPosition.x << "\n";
     }
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_D))
     {
-        cameraPosition.x -= speed * deltaTime;
+        cameraPosition.x += speed * deltaTime;
         std::cout << "Move X: " << cameraPosition.x << "\n";
     }
 
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_SPACE))
     {
-        cameraPosition.y -= speed * deltaTime;
+        cameraPosition.y += speed * deltaTime;
         std::cout << "Move Y: " << cameraPosition.y << "\n";
     }
     if (InputManager::Instance()->isKeyPressed(GLFW_KEY_Z))
     {
-        cameraPosition.y += speed * deltaTime;
+        cameraPosition.y -= speed * deltaTime;
         std::cout << "Move -Y: " << -cameraPosition.y << "\n";
     }
 
     
     m_camera->SetPosition(cameraPosition);
+
+
+    bool wireframe = false;
+    if (InputManager::Instance()->isKeyPressed(GLFW_KEY_1))
+    {
+        wireframe = !wireframe;
+
+        if (wireframe)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+       
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+  
 
 }
 
